@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title></title>
+        <link href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.2.2/css/bootstrap-combined.min.css" rel="stylesheet">
+        <style>
+          /*Styles*/
+        </style>
+    </head>
+    <body class="container">
+        <h1>Hello, world!</h1>
+
+        <p>Morbi in sem quis <a href="pdf/TestDocument.pdf" class="btn-js-upgrade" data-toggle="modal" data-target="#pdf-modal">and a pdf</a> dui placerat ornare. Pellentesque odio nisi, euismod in, pharetra a, ultricies in, diam. Sed arcu. Cras consequat.</p>
+       
+        <div id="pdf-modal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h3>Modal header</h3>
+          </div>
+          <div class="modal-body">
+            <div class="progress">
+              <div class="bar" style="width: 40%;"></div>
+            </div>
+            <canvas id="pdf-canvas"></canvas>
+          </div>
+          <div class="modal-footer">
+            <a href="#">Download</a>
+          </div>
+        </div>
+        
+        <script src="http://code.jquery.com/jquery-1.8.3.js"></script>
+        <script src="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/js/bootstrap.min.js"></script>
+        <script src="js/pdf-0.8.535.js"></script>
+        <script>
+            var pdfPreview = function() {
+              // Reference: 
+              //  http://jsbin.com/pdfjs-prevnext-v2/1/edits
+              //  https://github.com/mozilla/pdf.js/blob/gh-pages/web/viewer.js
+              PDFJS.workerSrc = 'js/pdf.worker-0.8.535.js';
+              $('.btn-js-upgrade').each(function() {
+                var jqElem = $(this);
+                var originalUrl = jqElem.attr('href');
+                jqElem.attr('href', jqElem.attr('data-target'));
+
+                jqElem.click(function() {
+                  $('.modal-footer a').attr('href', originalUrl);
+                  $('.modal-header h3').text(jqElem.text());
+
+                  var canvas = document.getElementById('pdf-canvas');
+                  var context = canvas.getContext('2d');
+                  // Clear it, in case something is up there
+                  context.clearRect(0, 0, canvas.width, canvas.height);
+
+                  PDFJS.getDocument(originalUrl).then(function(pdf) {
+                    // Using promise to fetch the page
+                    var currentPage = 1;
+
+                    $('#pdf-modal .progress').hide();
+                    console.log('here');
+                    var showPage = function(page) {
+                      pdf.getPage(currentPage).then(function(page) {
+                        var scale = $('.modal-body').width() > 700 ? 1.15 : 0.85;
+                        var viewport = page.getViewport(scale);
+
+                        // Prepare canvas using PDF page dimensions
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+
+                        var renderContext = {
+                          canvasContext: context,
+                          viewport: viewport
+                        };
+                        page.render(renderContext);
+                      });
+                    };
+                    console.log('foo');
+                    showPage(currentPage);
+
+                    if(pdf.numPages > 1 && $('.modal-footer a').length == 1) {
+                      var html = '<div class="modal-page-control"><span class="pull-left"><a href="#" class="previous">Previous</a> <a href="#" class="next">Next</a> Page <span class="current">' + currentPage + '</span> of ' + pdf.numPages + '</span></div>';
+                      $('.modal-footer').prepend(html);
+                      var previous = $('.modal-footer .previous').
+                        click(function(evt) {
+                          evt.preventDefault();
+                          if(currentPage > 1) {
+                            currentPage -= 1;
+                            $('.modal-footer span.current').text(currentPage);
+                            showPage(currentPage);
+                          }
+                        });
+                      var next =  $('.modal-footer .next').
+                        click(function(evt) {
+                          evt.preventDefault();
+                          if(currentPage < pdf.numPages) {
+                            currentPage += 1;
+                            $('.modal-footer span.current').text(currentPage);
+                            showPage(currentPage);
+                          }
+                        });
+                    }
+                    else {
+                      $('.modal-page-control').remove()
+                    }
+                  });
+                });
+              });
+            };
+
+            $(document).ready(function() {
+              pdfPreview();
+            });
+        </script>
+        <!-- I see you! -->
+    </body>
+</html>
