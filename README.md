@@ -7,6 +7,7 @@ This is a demo project showcasing how to use [https://github.com/mozilla/pdf.js]
 * https://github.com/mozilla/pdf.js#learning
 * https://gist.github.com/fcingolani/3300351
 * http://parall.ax/products/jspdf
+* http://plugins.jquery.com/pdfdoc/
 
 ## Thanks
 
